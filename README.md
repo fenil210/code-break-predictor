@@ -1,41 +1,41 @@
 # Code Break Predictor
 
-Code Break Predictor is a Claude Code plugin for predicting where code changes are likely to break later, not just whether they pass today.
+A Claude Code plugin that analyzes changes to predict future failure points and scalability bottlenecks.
 
-The goal is to surface the rare, extremely valuable failures that show up only when a system grows: pagination that collapses at 10k rows, queries that become bottlenecks under real traffic, abstractions that create long-term debt, and hidden coupling that slows future work.
+It is designed to surface the rare failures that only show up as a system grows: pagination that collapses at 10k rows, queries that become bottlenecks under real traffic, abstractions that create long-term debt, and hidden coupling that slows future work.
 
 ## Why this exists
 
 Most review workflows catch immediate defects. Far fewer catch future failure points while the code is still cheap to fix. This plugin is designed to make those risks visible during review.
 
-## Plugin architecture
+## What it looks for
 
-This repo uses a modular Claude Code layout:
+- Pagination and list handling that may fail at scale
+- Query patterns that will become expensive under real traffic
+- Abstractions that create long-term technical debt
+- Caching and consistency issues that may appear later
+- Hidden coupling that can slow future changes
+- Reliability and operational risks introduced by the change
 
-- .claude-plugin/plugin.json: plugin metadata and file registration
-- commands/predictor.md: the orchestrator command
-- agents/break-analyzer.md: the specialist analysis agent
+## Install
 
-The flow is intentionally split into analyzer -> specialist agent layers so the orchestration stays simple and the deep reasoning stays focused.
+```bash
+/plugin marketplace add fenil210/code-break-predictor
+/plugin install code-break-predictor@code-break-predictor
+```
 
-1. A command starts the workflow.
-2. The orchestrator hands the change set to the break-analyzer specialist.
-3. The specialist evaluates scale risk, future debt, and failure mechanisms.
-4. The orchestrator turns that into a concise decision-grade summary.
+## How to Use
 
-## File layout
+1. Open Claude Code in the root of the project you want to review.
+2. Install this plugin using the commands above.
+3. Run the predictor command on a diff, commit, branch, or changed files:
 
-.claude-plugin/
-  plugin.json
-commands/
-  predictor.md
-agents/
-  break-analyzer.md
-README.md
+```bash
+/predictor
+```
 
-## How to use it
-
-After installing this repository as a Claude Code plugin, run the predictor command against a git diff, commit, or changed files.
+4. Provide the change set you want analyzed.
+5. Review the forecasted failure modes, scalability risks, and mitigation ideas that Claude Code returns.
 
 Typical inputs:
 
@@ -44,12 +44,12 @@ Typical inputs:
 - one or more changed files
 - a feature branch with surrounding context
 
-The plugin will focus on questions like:
+## How it works
 
-- Will this paginate poorly once the data set grows?
-- Will this query pattern become expensive at scale?
-- Will this caching approach produce stale or inconsistent behavior?
-- Will this abstraction become technical debt in the next few iterations?
+1. A `break-analyzer` agent scans the change set and identifies likely future failure points.
+2. The command layer keeps the workflow simple and focused on the change being reviewed.
+3. The analysis emphasizes scale risk, reliability risk, hidden coupling, and technical debt.
+4. The final output is a concise, decision-grade summary with concrete mitigations or tests.
 
 ## Expected output
 
@@ -60,6 +60,18 @@ The analyzer should produce:
 - why those failures are likely
 - confidence and severity
 - concrete mitigation ideas or tests
+
+## Plugin structure
+
+```
+code-break-predictor/
+├── .claude-plugin/
+│   └── plugin.json         # manifest
+├── commands/
+│   └── predictor.md        # /predictor orchestrator
+└── agents/
+    └── break-analyzer.md   # future-break analysis specialist
+```
 
 ## Extending the plugin
 
@@ -73,17 +85,7 @@ The modular structure is meant to grow. Additional specialist agents can be adde
 
 The orchestrator can route to those specialists without changing the overall workflow.
 
-## Running locally
+## Requirements
 
-1. Clone the repo.
-2. Install it into your Claude Code plugin setup.
-3. Invoke the predictor command on a change set.
-4. Review the forecasted failure modes and suggested mitigations.
-
-## Project description
-
-AI-powered tool that analyzes code changes to predict future failure points and scalability bottlenecks.
-
-## Tags
-
-ai, software-engineering, predictive-analysis, code-quality, agentic-ai
+- Claude Code latest version
+- Run from your project root directory
