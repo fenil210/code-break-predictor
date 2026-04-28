@@ -1,0 +1,22 @@
+{
+  "name": "code-break-predictor",
+  "version": "1.0.0",
+  "description": "Claude Code plugin for predicting future code breakpoints, scalability bottlenecks, and technical debt from code changes.",
+  "author": "Fenil Ramoliya",
+  "repository": "https://github.com/fenil210/code-break-predictor",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "predictor",
+      "path": "commands/predictor.md",
+      "description": "Orchestrates future-break analysis for diffs, commits, and file changes."
+    }
+  ],
+  "agents": [
+    {
+      "name": "break-analyzer",
+      "path": "agents/break-analyzer.md",
+      "description": "Analyzes code changes and predicts future scalability, reliability, and debt failures."
+    }
+  ]
+}
