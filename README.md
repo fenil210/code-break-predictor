@@ -1,74 +1,89 @@
 # Code Break Predictor
 
-Code Break Predictor is an AI-powered tool for spotting where code changes are likely to break later — before the break actually happens.
+Code Break Predictor is a Claude Code plugin for predicting where code changes are likely to break later, not just whether they pass today.
 
-Instead of only asking, "Did this diff pass tests?", it asks:
+The goal is to surface the rare, extremely valuable failures that show up only when a system grows: pagination that collapses at 10k rows, queries that become bottlenecks under real traffic, abstractions that create long-term debt, and hidden coupling that slows future work.
 
-- Will this change create a scaling bottleneck at 10k, 100k, or 1M records?
-- Will pagination, caching, memory usage, or query behavior fail under real load?
-- Will this feature quietly accumulate technical debt that becomes expensive later?
+## Why this exists
 
-That kind of prediction is rare, and extremely valuable.
-Most teams can detect obvious bugs. Far fewer can identify the future failure points hidden inside otherwise successful code changes.
+Most review workflows catch immediate defects. Far fewer catch future failure points while the code is still cheap to fix. This plugin is designed to make those risks visible during review.
 
-## What it does
+## Plugin architecture
 
-Code Break Predictor analyzes code changes, surrounding context, and implementation patterns to forecast likely future issues such as:
+This repo uses a modular Claude Code layout:
 
-- pagination failures at higher data volumes
-- inefficient database queries that look fine in small tests
-- cache invalidation mistakes
-- memory growth and throughput regressions
-- brittle assumptions that work today but fail as the system scales
-- architectural debt that will slow future development
+- .claude-plugin/plugin.json: plugin metadata and file registration
+- commands/predictor.md: the orchestrator command
+- agents/break-analyzer.md: the specialist analysis agent
 
-## Why this matters
+The flow is intentionally split into analyzer -> specialist agent layers so the orchestration stays simple and the deep reasoning stays focused.
 
-A change can be correct today and still be dangerous tomorrow.
+1. A command starts the workflow.
+2. The orchestrator hands the change set to the break-analyzer specialist.
+3. The specialist evaluates scale risk, future debt, and failure mechanisms.
+4. The orchestrator turns that into a concise decision-grade summary.
 
-Examples:
+## File layout
 
-- pagination works for 100 rows, but breaks or slows badly at 10,000
-- a new endpoint passes tests, but creates an N+1 query pattern in production
-- a feature is launched quickly, but adds coupling that makes the next six sprints harder
+.claude-plugin/
+  plugin.json
+commands/
+  predictor.md
+agents/
+  break-analyzer.md
+README.md
 
-Finding these issues early saves time, money, and reputation. It turns debugging from a reactive cost into a proactive advantage.
+## How to use it
 
-## How it works
+After installing this repository as a Claude Code plugin, run the predictor command against a git diff, commit, or changed files.
 
-The system is designed to combine:
+Typical inputs:
 
-1. change analysis on diffs, commits, and pull requests
-2. codebase context to understand surrounding behavior
-3. heuristics and learned patterns for scale-related risk
-4. agentic reasoning to explain why a change may fail later
-5. prioritized output that highlights the most likely future breakpoints
+- a pull request diff
+- a commit range
+- one or more changed files
+- a feature branch with surrounding context
 
-The goal is not to replace reviewers. The goal is to give reviewers a new superpower: seeing future problems while the code is still cheap to fix.
+The plugin will focus on questions like:
 
-## Example outputs
+- Will this paginate poorly once the data set grows?
+- Will this query pattern become expensive at scale?
+- Will this caching approach produce stale or inconsistent behavior?
+- Will this abstraction become technical debt in the next few iterations?
 
-- "This pagination flow will likely degrade when result sets exceed 10k records."
-- "This cache strategy may hide stale reads once traffic becomes bursty."
-- "This query pattern will likely become a bottleneck as tenant count grows."
-- "This abstraction reduces near-term complexity but increases long-term coupling."
+## Expected output
 
-## Built for teams that care about long-term quality
+The analyzer should produce:
 
-Code Break Predictor is for teams that want to:
+- what changed
+- the most likely future failure points
+- why those failures are likely
+- confidence and severity
+- concrete mitigation ideas or tests
 
-- prevent expensive production surprises
-- reduce hidden technical debt
-- make scale risks visible during review
-- improve code quality without slowing velocity
+## Extending the plugin
 
-## Vision
+The modular structure is meant to grow. Additional specialist agents can be added later for areas like:
 
-The rare part of engineering is not finding syntax errors.
-It is predicting which small-looking changes will become the bugs, bottlenecks, and maintenance traps that hurt later.
+- performance profiling
+- API contract review
+- schema evolution risk
+- frontend state and rendering bottlenecks
+- operational and reliability review
 
-That is the core idea behind Code Break Predictor.
+The orchestrator can route to those specialists without changing the overall workflow.
+
+## Running locally
+
+1. Clone the repo.
+2. Install it into your Claude Code plugin setup.
+3. Invoke the predictor command on a change set.
+4. Review the forecasted failure modes and suggested mitigations.
+
+## Project description
+
+AI-powered tool that analyzes code changes to predict future failure points and scalability bottlenecks.
 
 ## Tags
 
-ai · software-engineering · predictive-analysis · code-quality · agentic-ai
+ai, software-engineering, predictive-analysis, code-quality, agentic-ai
